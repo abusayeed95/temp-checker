@@ -11,14 +11,19 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
         body {
-            background: url(images/bg-image.jpg) no-repeat;
+            background: url(images/bg-image.jpg);
+            background-repeat: no-repeat;
             background-size: cover;
             height: 100vh;
+        }
+
+        #city {
+            text-transform: capitalize;
         }
     </style>
 </head>
 
-<body>
+<body onload="startTime()">
     <div class="container">
         <form class="col-md-6 m-auto py-5">
             <div class="input-group mb-3">
@@ -30,23 +35,92 @@
             </div>
         </form>
         <div class="weather-status text-white text-center">
-            <img src="https://openweathermap.org/img/wn/02d@2x.png" alt="">
-            <h1>Dhaka</h1>
-            <h3><span id="temperature">38.06</span>&deg;C</h3>
-            <h1 class="lead">Clouds</h1>
+            <h1 id="clock"></h1>
+            <div id="icon"></div>
+            <h1 id="city">City</h1>
+            <h3><span id="temperature">00</span>&deg;C</h3>
+            <h1 id="weather">Weather Description</h1>
+            <div class="row">
+                <h2 class="col-md-6 col-12 m-auto">Sunrise (<span id="city-rise"></span>):<span id="sunrise"></span>
+                </h2>
+                <h2 class="col-md-6 col-12 m-auto">Sunset (<span id="city-set"></span>):<span id="sunset"></span></h2>
+            </div>
         </div>
     </div>
 
     <script>
+
+        function startTime() {
+            var today = new Date();
+            var h = today.getHours();
+            var m = today.getMinutes();
+            var s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            document.getElementById('clock').innerHTML =
+                h + ":" + m + ":" + s;
+            var t = setTimeout(startTime, 500);
+        }
+        function checkTime(i) {
+            if (i < 10) { i = "0" + i };
+            return i;
+        }
+
         function searchCity() {
             const cityName = document.getElementById('search-city').value;
-            fetch(`"http://api.openweathermap.org/data/2.5/weather?q=` + `${cityName}` + `&appid=f2d561f363acbf11aee171b1511632df"`)
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=f2d561f363acbf11aee171b1511632df`)
                 .then(res => res.json())
                 .then(data => {
                     const tempData = data.main.temp;
                     const tempInCel = parseInt(eval(tempData - 273.15));
                     document.getElementById('temperature').innerText = tempInCel;
+                    document.getElementById('city').innerText = cityName;
+
+                    const mainWeather = data.weather[0].main;
+                    document.getElementById('weather').innerText = mainWeather;
+
+                    if (mainWeather == 'Clear') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/01d@2x.png>';
+                    }
+                    if (mainWeather == 'Rain') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/10d@2x.png">';
+                    }
+                    if (mainWeather == 'Haze') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/50d@2x.png">';
+                    }
+                    if (mainWeather == 'Clouds') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/04n@2x.png">';
+                    }
+                    if (mainWeather == 'Thunderstorm') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/11d@2x.png">';
+                    }
+                    if (mainWeather == 'Snow') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/13d@2x.png">';
+                    }
+                    if (mainWeather == 'Mist') {
+                        document.getElementById('icon').innerHTML = '<img src="http://openweathermap.org/img/wn/50d@2x.png">';
+                    }
+
+                    const sunriseTimeStamp = data.sys.sunrise;
+                    const riseDate = new Date(sunriseTimeStamp * 1000);
+                    const riseHours = riseDate.getHours();
+                    const riseMinutes = riseDate.getMinutes();
+                    const riseSec = riseDate.getSeconds();
+                    const sunrise = riseHours + ':' + riseMinutes + ':' + riseSec;
+                    document.getElementById('sunrise').innerText = sunrise;
+
+                    const sunsetTimeStamp = data.sys.sunset;
+                    const setDate = new Date(sunsetTimeStamp * 1000);
+                    const setHours = setDate.getHours();
+                    const setMinutes = setDate.getMinutes();
+                    const setSec = setDate.getSeconds();
+                    const sunset = setHours + ':' + setMinutes + ':' + setSec;
+                    document.getElementById('sunset').innerText = sunset;
+
+                    document.getElementById('city-rise').innerText = cityName + " Time";
+                    document.getElementById('city-set').innerText = cityName + " Time";
                 })
+                .catch(error => alert('spell correctly/enter valid city Name'));
         }
     </script>
 
